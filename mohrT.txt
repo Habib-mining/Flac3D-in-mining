@@ -1,0 +1,36 @@
+model new
+model large-strain off
+model gravity 10
+
+zone create brick size 200 1 20 point 0 (0,0,0) point 1 (100,0,0)  ...
+                  point 2 (0,200,0) point 3 (0,0,20) group 'conglomerate'
+zone create brick size 200 1 10 point 0 (0,0,20) point 1 (100,0,20)  ...
+                  point 2 (0,200,20) point 3 (0,0,30) group 'siltstone'
+zone create brick size 200 1 30 point 0 (0,0,30) point 1 (100,0,30)  ...
+                  point 2 (0,200,30) point 3 (0,0,60) group 'coal'
+zone create brick size 200 1 10 point 0 (0,0,60) point 1 (100,0,60)  ...
+                  point 2 (0,200,60) point 3 (0,0,70) group 'sandstone'
+zone create brick size 200 1 20 point 0 (0,0,70) point 1 (100,0,70)  ...
+                  point 2 (0,200,70) point 3 (0,0,90) group 'shale'
+zone create brick size 200 1 30 point 0 (0,0,90) point 1 (100,0,90)  ...
+                  point 2 (0,200,90) point 3 (0,0,120) group 'sandy clay'
+
+zone group 'excavation' range position-x 35. 65. position-z 40. 50.5 position-y 100
+zone cmodel assign mohr-coulomb-tension
+
+zone property density 1600. bulk  4e7  shear 3e7 cohesion 1.2e20 tension 2000
+
+zone gridpoint fix velocity   range union position-x 0 position-x 100
+zone gridpoint fix velocity-y
+zone gridpoint fix velocity-z range position-z 0
+zone initialize-stress ratio 0.75
+model solve
+zone gridpoint initialize displacement (0,0,0)
+zone interface create by-face separate ...
+                      range group 'excavation' group 'coal' position-z 40. 50.5
+zone interface node property stiffness-normal 4e8 stiffness-shear 4e8 friction 30.
+model large-strain on
+;zone relax excavate range group 'excavation'
+zone delete range group 'excavation'
+model solve
+model save 'mohrt'
